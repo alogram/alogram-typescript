@@ -1,0 +1,44 @@
+{
+  "name": "@alogram/payrisk",
+  "version": "0.1.0-rc.1",
+  "description": "The official 'Smart' TypeScript client for the Alogram Payrisk API.",
+  "author": "Alogram Inc.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "examples"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "eslint src/**/*.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "uuid": "^9.0.1",
+    "async-retry": "^1.3.3"
+  },
+  "peerDependencies": {
+    "@opentelemetry/api": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.0",
+    "@types/async-retry": "^1.4.0",
+    "@opentelemetry/api": "^1.7.0"
+  }
+}
