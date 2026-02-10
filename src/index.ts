@@ -4,4 +4,5 @@
 export * from './client';
 export * from './exceptions';
 export * from './webhooks';
+export * from './testing';
 export * from './_generated/models/index';

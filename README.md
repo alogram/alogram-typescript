@@ -1,112 +1,129 @@
-# Alogram Payrisk TypeScript SDK
+# Alogram PayRisk SDK for TypeScript & JavaScript
 
-[![npm version](https://img.shields.io/npm/v/@alogram/payrisk.svg?style=flat-square)](https://www.npmjs.com/package/@alogram/payrisk)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
-[![Status](https://img.shields.io/badge/status-preview-orange.svg?style=flat-square)](#)
+[![NPM version](https://img.shields.io/npm/v/@alogram/payrisk.svg)](https://www.npmjs.com/package/@alogram/payrisk)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-The official TypeScript client for the **Alogram Payments Risk API**. This SDK provides a robust, "smart" interface for checking fraud risk, ingesting behavioral signals, and managing payment lifecycle events in Node.js and Browser environments.
+The official Alogram PayRisk 'Smart' SDK for TypeScript and Node.js. Designed for high-performance financial systems that require resilient risk intelligence and native observability.
 
-**Key Features:**
-*   **Resilient:** Built-in retries with exponential backoff for transient errors.
-*   **Traceable:** Automatic injection of `x-trace-id` and `x-idempotency-key` for every request.
-*   **Observable:** First-class support for **OpenTelemetry** spans and attributes.
-*   **Type-Safe:** Fully typed request/response models.
-*   **Modern:** Supports ESM and CommonJS, works with Node.js 18+.
+## 🚀 Features
 
----
+-   **🏢 Smart Client Architecture**: Dedicated clients for server-side (`AlogramRiskClient`) and browser (`AlogramPublicClient`).
+-   **🛡️ Automated Identity**: Automatic injection of `x-api-key`, `Authorization`, and tenant headers.
+-   **🔄 Built-in Resiliency**: Transparent exponential backoff and jittered retries (3 retries on 429/5xx).
+-   **🕵️ OpenTelemetry Native**: Built-in tracing for monitoring risk decision latency and outcomes.
+-   **📐 Type Safety**: Deeply typed models for all request/response payloads.
 
-## 🏗️ Installation
+## 📦 Installation
 
 ```bash
 npm install @alogram/payrisk
 ```
 
----
+## 🛠️ Quick Start
 
-## 🚀 Quickstart
-
-### 1. Initialize the Client
+### Evaluate Risk (Server-Side)
 
 ```typescript
 import { AlogramRiskClient } from '@alogram/payrisk';
 
 const client = new AlogramRiskClient({
-  baseUrl: 'https://api.alogram.ai',
-  apiKey: 'sk_live_...',
-  tenantId: 'your_tenant_id', // Optional default
-  debug: false
+  apiKey: 'sk_live_your_secret_key',
+  tenantId: 'tenant_123'
 });
+
+async function runCheck() {
+  const decision = await client.checkRisk({
+    purchase: { amount: 99.99, currency: 'USD' },
+    identity: { email: 'customer@example.com' }
+  });
+  console.log(`Decision: ${decision.decision}`);
+}
 ```
 
 ---
 
-## 📊 Observability (OpenTelemetry)
+## 🛡️ Error Handling
 
-The SDK automatically detects if `@opentelemetry/api` is configured in your project. It emits spans for all API calls with standard attributes:
+Catch specific errors to manage your checkout flow gracefully:
 
-*   `alogram.tenant_id`
-*   `alogram.idempotency_key`
-*   `alogram.trace_id`
-*   `alogram.decision`
+```typescript
+import { RateLimitError, ValidationError, AlogramError } from '@alogram/payrisk';
 
-To enable, ensure the OTel API is installed:
+try {
+  const decision = await client.checkRisk(request);
+} catch (error) {
+  if (error instanceof RateLimitError) {
+    // 🔄 SDK handles retries, but you can add custom logging here
+  } else if (error instanceof ValidationError) {
+    // ❌ Handle invalid input data
+    console.error(error.message);
+  } else if (error instanceof AlogramError) {
+    // 🚨 Generic API error
+  }
+}
+```
+
+## 🔑 Authentication & Keys
+
+Obtain your keys from the [Alogram Dashboard](https://dashboard.alogram.ai/keys).
+
+| Key Type | Prefix | Client | Use Case |
+| :--- | :--- | :--- | :--- |
+| **Secret Key** | `sk_live_...` | `AlogramRiskClient` | Server-side risk checks. **Never expose.** |
+| **Publishable Key** | `pk_live_...` | `AlogramPublicClient` | Frontend behavioral signals. |
+
+## 🤖 For AI Agents (Integration Context)
+
+If you are using an AI agent (like ChatGPT, Claude, or Gemini), provide this context:
+
+> "I am integrating the Alogram PayRisk TypeScript SDK. I need to call `checkRisk` in my backend service. Use the `AlogramRiskClient`, handle `RateLimitError` gracefully, and ensure you use the `idempotencyKey` parameter."
+
+---
+
+## 🧪 Local Testing & Mocking
+
+Use the zero-dependency `MockRiskClient` for your test suite:
+
+```typescript
+import { MockRiskClient } from '@alogram/payrisk/testing';
+
+const mock = new MockRiskClient();
+mock.queueDecision('decline', 0.99, 'high_risk_ip');
+
+const decision = await myApp.process(mock);
+console.log(decision.decision); // 'decline'
+```
+
+## 🏗️ Environment Testing
+
+### Alogram Sandbox
+For safe integration testing, point your client to the Sandbox environment:
+```typescript
+const client = new AlogramRiskClient({
+  apiKey: 'sk_test_...',
+  baseUrl: 'https://api-sandbox.alogram.ai'
+});
+```
+
+### Local Emulator
+For hermetic local testing, run the **Alogram Local Emulator**:
 ```bash
-npm install @opentelemetry/api
+docker run -p 8080:8080 alogram/payrisk-emulator
 ```
-
----
-
-## 🧠 Core Concepts
-
-### Idempotency & Tracing
-Unique IDs are generated automatically for every request.
-
+Point your client to the local instance:
 ```typescript
-// Manual override (Optional)
-await client.checkRisk(request, {
-  idempotencyKey: 'order_123',
-  traceId: 'req_abc'
+const client = new AlogramRiskClient({
+  baseUrl: 'http://localhost:8080',
+  apiKey: 'test'
 });
 ```
 
-### Webhook Security
-Always verify incoming webhooks using the built-in `WebhookVerifier`.
-
-```typescript
-import { WebhookVerifier } from '@alogram/payrisk';
-
-const isValid = WebhookVerifier.verify(
-  rawBody, 
-  headers['x-alogram-signature'], 
-  process.env.ALOGRAM_WEBHOOK_SECRET
-);
-```
-
 ---
 
-## ⚠️ Error Handling
+## 📚 Documentation
 
-The SDK maps HTTP errors to specific TypeScript classes:
+For full API reference, visit [docs.alogram.ai](https://docs.alogram.ai).
 
-| Exception | HTTP Status | Description |
-| :--- | :--- | :--- |
-| `AuthenticationError` | 401, 403 | Invalid API Key or Permissions. |
-| `ValidationError` | 400, 422 | Invalid request body or missing fields. |
-| `RateLimitError` | 429 | Too many requests. **Automatically Retried.** |
-| `InternalServerError` | 500+ | Server-side issues. **Automatically Retried.** |
+## ⚖️ License
 
----
-
-## 📚 Cookbook Examples
-
-Explore the `examples/` directory for production patterns:
-
-*   [**Async Signal Ingestion**](examples/asyncSignalIngestion.ts): Non-blocking behavioral data collection.
-*   [**Production Error Handling**](examples/productionErrorHandling.ts): Fail-open strategies.
-*   [**Webhook Verification**](examples/webhookVerification.ts): Cryptographic signature checking.
-
----
-
-## 📦 License
-
-Apache 2.0
+Apache License 2.0. See [LICENSE](LICENSE) for details.
