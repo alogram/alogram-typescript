@@ -23,4 +23,4 @@ The best way to contribute is to **[Open an Issue](https://github.com/alogram/al
 - Once the internal change is merged, a new version will be automatically built and synchronized to this public repository.
 
 ## License
-This project is licensed under the terms of the Alogram License. See [LICENSE](LICENSE) for more information.
+This project is licensed under the terms of the Apache 2.0 License. See [LICENSE](LICENSE) for more information.

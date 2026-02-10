@@ -2,6 +2,12 @@
 
 All notable changes to the Alogram PayRisk TypeScript SDK will be documented in this file.
 
+## [0.1.6] - 2026-02-10
+
+### Changed
+- Enhanced fetch-based retry logic for Node.js 18+ and Browser compatibility.
+- Synchronized with Payments Risk API v0.1.6.
+
 ## [0.1.0] - 2026-02-09
 
 ### Added
