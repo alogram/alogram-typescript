@@ -15,7 +15,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      id-token: write  # Required for provenance
       contents: read
     steps:
       - uses: actions/checkout@v4
@@ -36,8 +36,10 @@ jobs:
         if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'false')
         run: npm publish --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # NPM doesn't fully support OIDC for 'publish' yet like PyPI does, so a token is usually still needed for 'npm publish' unless using a specific provider.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           
       - name: Dry Run Check
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true'
-        run: echo "🧪 [DRY RUN] Package built successfully. Would have published to NPM."
+        run: |
+          npm publish --dry-run
+          echo "🧪 [DRY RUN] Package build and dry-run publish successful."

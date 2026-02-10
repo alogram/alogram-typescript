@@ -1,14 +1,22 @@
 {
   "name": "@alogram/payrisk",
-  "version": "0.1.4",
+  "version": "0.1.6-rc.3",
   "description": "The official 'Smart' TypeScript client for the Alogram Payrisk API.",
   "author": "Alogram Inc.",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=18"
   },
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
     "dist",
     "README.md",
@@ -36,6 +44,9 @@
   "devDependencies": {
     "typescript": "^5.0.0",
     "vitest": "^1.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@types/node": "^20.0.0",
     "@types/uuid": "^9.0.0",
     "@types/async-retry": "^1.4.0",

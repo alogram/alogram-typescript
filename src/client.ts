@@ -25,7 +25,7 @@ try {
 }
 
 export interface AlogramClientOptions {
-  baseUrl: string;
+  baseUrl?: string;
   apiKey?: string;
   accessToken?: string;
   tenantId?: string;
@@ -41,6 +41,7 @@ abstract class AlogramBaseClient {
   protected api: generated.PayriskApi;
 
   constructor(protected options: AlogramClientOptions) {
+    const baseUrl = options.baseUrl || 'https://api.alogram.ai';
     const headers: Record<string, string> = {};
     if (options.apiKey) {
       headers['x-api-key'] = options.apiKey;
@@ -56,7 +57,7 @@ abstract class AlogramBaseClient {
     }
 
     this.config = new generated.Configuration({
-      basePath: options.baseUrl,
+      basePath: baseUrl,
       headers: headers,
     });
 
@@ -85,6 +86,16 @@ abstract class AlogramBaseClient {
         return new InternalServerError(message, status);
       }
       return new AlogramError(message, status);
+    }
+    // If it's already one of our custom error types, return it directly
+    if (
+      error instanceof AuthenticationError ||
+      error instanceof RateLimitError ||
+      error instanceof ValidationError ||
+      error instanceof InternalServerError ||
+      error instanceof AlogramError
+    ) {
+      return error;
     }
     return error;
   }
@@ -146,23 +157,30 @@ export class AlogramRiskClient extends AlogramBaseClient {
     return this.withTelemetry('alogram.check_risk', { tid, ik }, async () => {
       const headers: Record<string, string> = { ...(this.config.headers || {}) };
       if (request.entities?.tenantId) {
-        headers['x-trusted-tenant-id'] = request.entities.tenant_id || request.entities.tenantId;
+        headers['x-trusted-tenant-id'] = request.entities.tenantId;
       }
       if (request.entities?.clientId) {
-        headers['x-trusted-client-id'] = request.entities.client_id || request.entities.clientId;
+        headers['x-trusted-client-id'] = request.entities.clientId;
       }
-
-      const initOverrides: RequestInit = { headers };
 
       try {
         return await retry(
           async (bail) => {
             try {
+              // Re-construct headers for every attempt to ensure consistent state
+              const attemptHeaders: Record<string, string> = { ...(this.config.headers || {}) };
+      if (request.entities?.tenantId) {
+        attemptHeaders['x-trusted-tenant-id'] = request.entities.tenantId;
+      }
+      if (request.entities?.clientId) {
+        attemptHeaders['x-trusted-client-id'] = request.entities.clientId;
+      }
+
               return await this.api.riskCheck({
                 xIdempotencyKey: ik,
                 xTraceId: tid,
                 checkRequest: request,
-              }, initOverrides);
+              }, { headers: attemptHeaders });
             } catch (err: any) {
               const mapped = this.mapError(err);
               if (mapped instanceof RateLimitError || mapped instanceof InternalServerError) {
@@ -174,8 +192,9 @@ export class AlogramRiskClient extends AlogramBaseClient {
           },
           {
             retries: 2,
-            minTimeout: 100,
-            maxTimeout: 1000,
+            minTimeout: 500,
+            maxTimeout: 5000,
+            randomize: true,
           }
         );
       } catch (e) {
