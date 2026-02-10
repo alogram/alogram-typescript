@@ -1,6 +1,6 @@
 {
   "name": "@alogram/payrisk",
-  "version": "0.1.6-rc.3",
+  "version": "0.1.6-rc.4",
   "description": "The official 'Smart' TypeScript client for the Alogram Payrisk API.",
   "author": "Alogram Inc.",
   "license": "Apache-2.0",
