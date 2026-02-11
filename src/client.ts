@@ -18,7 +18,7 @@ let tracer: any = null;
 try {
   const { trace } = require('@opentelemetry/api');
   if (trace) {
-    tracer = trace.getTracer('@alogram/payrisk', '0.1.6-rc.9');
+    tracer = trace.getTracer('@alogram/payrisk', '0.1.6-rc.10');
   }
 } catch (e) {
   // OTel not available, skip telemetry
