@@ -1,9 +1,17 @@
 {
   "name": "@alogram/payrisk",
-  "version": "0.1.6-rc.10",
+  "version": "0.1.6-rc.14",
   "description": "The official 'Smart' TypeScript client for the Alogram Payrisk API.",
-  "author": "Alogram Inc.",
+  "author": "Alogram Inc. <support@alogram.ai>",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alogram/alogram-typescript.git"
+  },
+  "homepage": "https://www.alogram.ai",
+  "bugs": {
+    "url": "https://github.com/alogram/alogram-typescript/issues"
+  },
   "engines": {
     "node": ">=18"
   },
