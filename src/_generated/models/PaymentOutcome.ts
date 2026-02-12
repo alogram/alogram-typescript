@@ -63,7 +63,6 @@ import {
  * @interface PaymentOutcome
  */
 export interface PaymentOutcome {
-    [key: string]: any | any;
     /**
      * 
      * @type {PaymentAuthorizationOutcome}
@@ -119,7 +118,6 @@ export function PaymentOutcomeFromJSONTyped(json: any, ignoreDiscriminator: bool
     }
     return {
         
-            ...json,
         'authorization': json['authorization'] == null ? undefined : PaymentAuthorizationOutcomeFromJSON(json['authorization']),
         'capture': json['capture'] == null ? undefined : PaymentCaptureOutcomeFromJSON(json['capture']),
         'refund': json['refund'] == null ? undefined : PaymentRefundOutcomeFromJSON(json['refund']),
@@ -140,7 +138,6 @@ export function PaymentOutcomeToJSONTyped(value?: PaymentOutcome | null, ignoreD
 
     return {
         
-            ...value,
         'authorization': PaymentAuthorizationOutcomeToJSON(value['authorization']),
         'capture': PaymentCaptureOutcomeToJSON(value['capture']),
         'refund': PaymentRefundOutcomeToJSON(value['refund']),

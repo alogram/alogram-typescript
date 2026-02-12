@@ -81,7 +81,7 @@ export interface Card {
      */
     cardType?: PaymentCardTypeEnum;
     /**
-     * Bank Identification Number (IIN). First 6–8 digits of the PAN; do not send full PAN.
+     * Bank Identification Number (IIN). First 6-8 digits of the PAN; do not send full PAN.
      * @type {string}
      * @memberof Card
      */

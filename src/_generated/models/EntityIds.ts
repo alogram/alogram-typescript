@@ -17,9 +17,9 @@ import { mapValues } from '../runtime';
  * Canonical entity identifiers (tenant/client/user/device/session). Do not send raw PII. Hash emails/phones/addresses as sha256 and prefix with 'sha256_'.
  * Tiered support:
  *   - tenantId is the top-level SaaS customer (required for all flows).
- *   - clientId is the tenant’s downstream business customer (e.g. merchant/partner) and MAY be omitted for
+ *   - clientId is the tenant's downstream business customer (e.g. merchant/partner) and MAY be omitted for
  *     processor / bank / PSP-style integrations.
- *   - endCustomerId is the tenant/client’s consumer or business account (cardholder, shopper, etc.) and
+ *   - endCustomerId is the tenant/client's consumer or business account (cardholder, shopper, etc.) and
  *     MAY be omitted for purely device- or instrument-level checks.
  * 
  * @export
