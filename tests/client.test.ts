@@ -26,12 +26,14 @@ describe('Dual-Trust SDK Architecture', () => {
     const validDecision = {
       decision: 'approve',
       riskScore: 0.1,
+      decisionScore: 0.1,
       assessmentId: 'as_12345678901234567890123456789012',
       decisionAt: new Date().toISOString(),
       paymentIntentId: 'pi_00000000000000000000000000000000'
     };
 
     const validRequest = {
+      xIdempotencyKey: 'idk_550e8400e29b41d4a716446655440000',
       eventType: 'purchase',
       entities: { tenantId: 'tid_test', clientId: 'cid_test', endCustomerId: 'ecid_test' },
       purchase: { amount: 10, currency: 'USD' }
@@ -83,7 +85,7 @@ describe('Dual-Trust SDK Architecture', () => {
           ok: false,
           status: 500,
           statusText: 'Internal Server Error',
-          json: async () => ({ code: 500 }),
+          json: async () => ({ code: 500, message: 'Internal Server Error' }),
           headers: new Headers({ 'content-type': 'application/json' }),
         } as Response)
         .mockResolvedValueOnce({

@@ -3,15 +3,25 @@
 [![NPM version](https://img.shields.io/npm/v/@alogram/payrisk.svg)](https://www.npmjs.com/package/@alogram/payrisk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-The official Alogram PayRisk 'Smart' SDK for TypeScript and Node.js. Designed for high-performance financial systems that require resilient risk intelligence and native observability.
+The official TypeScript/Node.js client for the **Alogram PayRisk Engine**. 
+
+Alogram PayRisk is a decision management and risk orchestration engine for global commerce. It fuses machine learning, behavioral analytics, and deterministic business rules into a high-fidelity scoring pipeline designed for enterprise scale and auditability.
+
+## 🧠 The Three-Expert Architecture
+
+The SDK provides unified access to three specialized risk experts:
+
+-   **Risk Scoring**: Real-time assessment and decision orchestration for purchases.
+-   **Signal Intelligence**: Ingestion of behavioral telemetry and payment lifecycle events.
+-   **Forensic Data**: Deep visibility into historical assessments and decision transparency.
 
 ## 🚀 Features
 
--   **🏢 Smart Client Architecture**: Dedicated clients for server-side (`AlogramRiskClient`) and browser (`AlogramPublicClient`).
+-   **🏢 Smart Client Architecture**: Specialized clients for server-side (`AlogramRiskClient`) and browser (`AlogramPublicClient`).
 -   **🛡️ Automated Identity**: Automatic injection of `x-api-key`, `Authorization`, and tenant headers.
 -   **🔄 Built-in Resiliency**: Transparent exponential backoff and jittered retries (3 retries on 429/5xx).
--   **🕵️ OpenTelemetry Native**: Built-in tracing for monitoring risk decision latency and outcomes.
--   **📐 Type Safety**: Deeply typed models for all request/response payloads.
+-   **🕵️ Native Observability**: Built-in OpenTelemetry tracing for monitoring risk outcomes and latency.
+-   **📐 Type Safe**: Deeply typed models for all request/response payloads.
 
 ## 📦 Installation
 
@@ -21,13 +31,15 @@ npm install @alogram/payrisk
 
 ## 🛠️ Quick Start
 
-### Evaluate Risk (Server-Side)
+### 1. Evaluate Risk (Risk Scoring Expert)
+
+Assess a purchase in real-time. This invokes the authoritative scoring pipeline.
 
 ```typescript
 import { AlogramRiskClient } from '@alogram/payrisk';
 
 const client = new AlogramRiskClient({
-  apiKey: 'sk_live_your_secret_key',
+  apiKey: 'sk_live_...',
   tenantId: 'tenant_123'
 });
 
@@ -36,93 +48,76 @@ async function runCheck() {
     purchase: { amount: 99.99, currency: 'USD' },
     identity: { email: 'customer@example.com' }
   });
-  console.log(`Decision: ${decision.decision}`);
+  
+  console.log(`Decision: ${decision.decision} | Score: ${decision.decisionScore}`);
 }
+```
+
+### 2. Ingest Lifecycle Events (Signal Intelligence Expert)
+
+Stream payment lifecycle updates to the Engine for continuous model training.
+
+```typescript
+await client.ingestEvent({
+  eventType: 'authorization',
+  paymentIntentId: 'pi_123...',
+  amount: 99.99,
+  currency: 'USD',
+  outcome: { authorization: { approved: true, responseCode: '00' } }
+});
 ```
 
 ---
 
-## 🛡️ Error Handling
+## 🛡️ Error Handling & Resiliency
 
-Catch specific errors to manage your checkout flow gracefully:
+The SDK distinguishes between transient network issues and validation errors.
 
 ```typescript
-import { RateLimitError, ValidationError, AlogramError } from '@alogram/payrisk';
+import { ValidationError, AlogramError } from '@alogram/payrisk';
 
 try {
   const decision = await client.checkRisk(request);
 } catch (error) {
-  if (error instanceof RateLimitError) {
-    // 🔄 SDK handles retries, but you can add custom logging here
-  } else if (error instanceof ValidationError) {
+  if (error instanceof ValidationError) {
     // ❌ Handle invalid input data
-    console.error(error.message);
+    console.error(`Validation Failed: ${error.message}`);
   } else if (error instanceof AlogramError) {
-    // 🚨 Generic API error
+    // 🚨 Generic API or Authentication error
   }
 }
 ```
 
-## 🔑 Authentication & Keys
+## 🕵️ Observability (OpenTelemetry)
 
-Obtain your keys from the [Alogram Dashboard](https://dashboard.alogram.ai/keys).
-
-| Key Type | Prefix | Client | Use Case |
-| :--- | :--- | :--- | :--- |
-| **Secret Key** | `sk_live_...` | `AlogramRiskClient` | Server-side risk checks. **Never expose.** |
-| **Publishable Key** | `pk_live_...` | `AlogramPublicClient` | Frontend behavioral signals. |
-
-## 🤖 For AI Agents (Integration Context)
-
-If you are using an AI agent (like ChatGPT, Claude, or Gemini), provide this context:
-
-> "I am integrating the Alogram PayRisk TypeScript SDK. I need to call `checkRisk` in my backend service. Use the `AlogramRiskClient`, handle `RateLimitError` gracefully, and ensure you use the `idempotencyKey` parameter."
-
----
-
-## 🧪 Local Testing & Mocking
-
-Use the zero-dependency `MockRiskClient` for your test suite:
+The SDK automatically integrates with `@opentelemetry/api` if installed.
 
 ```typescript
-import { MockRiskClient } from '@alogram/payrisk/testing';
+import { trace } from '@opentelemetry/api';
 
-const mock = new MockRiskClient();
-mock.queueDecision('decline', 0.99, 'high_risk_ip');
-
-const decision = await myApp.process(mock);
-console.log(decision.decision); // 'decline'
-```
-
-## 🏗️ Environment Testing
-
-### Alogram Sandbox
-For safe integration testing, point your client to the Sandbox environment:
-```typescript
-const client = new AlogramRiskClient({
-  apiKey: 'sk_test_...',
-  baseUrl: 'https://api-sandbox.alogram.ai'
+// Spans will automatically include 'alogram.decision' and 'alogram.trace_id'
+await trace.getTracer('checkout').startActiveSpan('process', async (span) => {
+  const decision = await client.checkRisk(request);
+  span.end();
 });
 ```
 
-### Local Emulator
-For hermetic local testing, run the **Alogram Local Emulator**:
-```bash
-docker run -p 8080:8080 alogram/payrisk-emulator
-```
-Point your client to the local instance:
-```typescript
-const client = new AlogramRiskClient({
-  baseUrl: 'http://localhost:8080',
-  apiKey: 'test'
-});
-```
+## 🏗️ Environments
+
+| Environment | Base URL | Key Type |
+| :--- | :--- | :--- |
+| **Production** | `https://api.alogram.ai` | `sk_live_...` |
+| **Sandbox** | `https://api-sandbox.alogram.ai` | `sk_test_...` |
+| **Local** | `http://localhost:8080` | `test` |
 
 ---
 
-## 📚 Documentation
+## 🤖 For AI Agents
 
-For full API reference, visit [docs.alogram.ai](https://docs.alogram.ai).
+If using an AI agent (ChatGPT, Claude, Gemini) for integration, provide this context:
+> "Use the Alogram PayRisk TypeScript SDK. Always prefer the `AlogramRiskClient` for backend operations. Access the authoritative blended score via the `decisionScore` attribute of the response. Use the `idempotencyKey` parameter for all write operations."
+
+---
 
 ## ⚖️ License
 

@@ -18,7 +18,7 @@ let tracer: any = null;
 try {
   const { trace } = require('@opentelemetry/api');
   if (trace) {
-    tracer = trace.getTracer('@alogram/payrisk', '0.1.6');
+    tracer = trace.getTracer('@alogram/payrisk', '0.2.8');
   }
 } catch (e) {
   // OTel not available, skip telemetry
@@ -38,7 +38,11 @@ export interface AlogramClientOptions {
  */
 abstract class AlogramBaseClient {
   protected config: generated.Configuration;
-  protected api: generated.PayriskApi;
+  
+  // Multi-Expert APIs (Tag-based organization in 0.2.5+)
+  public riskScoring: generated.RiskScoringApi;
+  public signals: generated.SignalIntelligenceApi;
+  public forensics: generated.ForensicDataApi;
 
   constructor(protected options: AlogramClientOptions) {
     const baseUrl = options.baseUrl || 'https://api.alogram.ai';
@@ -61,7 +65,9 @@ abstract class AlogramBaseClient {
       headers: headers,
     });
 
-    this.api = new generated.PayriskApi(this.config);
+    this.riskScoring = new generated.RiskScoringApi(this.config);
+    this.signals = new generated.SignalIntelligenceApi(this.config);
+    this.forensics = new generated.ForensicDataApi(this.config);
   }
 
   protected generateId(prefix: string): string {
@@ -155,28 +161,20 @@ export class AlogramRiskClient extends AlogramBaseClient {
     const tid = overrides?.traceId || this.generateId('trc');
 
     return this.withTelemetry('alogram.check_risk', { tid, ik }, async () => {
-      const headers: Record<string, string> = { ...(this.config.headers || {}) };
-      if (request.entities?.tenantId) {
-        headers['x-trusted-tenant-id'] = request.entities.tenantId;
-      }
-      if (request.entities?.clientId) {
-        headers['x-trusted-client-id'] = request.entities.clientId;
-      }
-
       try {
         return await retry(
           async (bail) => {
             try {
               // Re-construct headers for every attempt to ensure consistent state
               const attemptHeaders: Record<string, string> = { ...(this.config.headers || {}) };
-      if (request.entities?.tenantId) {
-        attemptHeaders['x-trusted-tenant-id'] = request.entities.tenantId;
-      }
-      if (request.entities?.clientId) {
-        attemptHeaders['x-trusted-client-id'] = request.entities.clientId;
-      }
+              if (request.entities?.tenantId) {
+                attemptHeaders['x-trusted-tenant-id'] = request.entities.tenantId;
+              }
+              if (request.entities?.clientId) {
+                attemptHeaders['x-trusted-client-id'] = request.entities.clientId;
+              }
 
-              return await this.api.riskCheck({
+              return await this.riskScoring.riskCheck({
                 xIdempotencyKey: ik,
                 xTraceId: tid,
                 checkRequest: request,
@@ -221,7 +219,7 @@ export class AlogramRiskClient extends AlogramBaseClient {
       }
 
       try {
-        await this.api.ingestSignals({
+        await this.signals.ingestSignals({
           xIdempotencyKey: ik,
           xTraceId: tid,
           signalsRequest: request,
@@ -244,7 +242,7 @@ export class AlogramRiskClient extends AlogramBaseClient {
 
     return this.withTelemetry('alogram.ingest_event', { tid, ik }, async () => {
       try {
-        await this.api.ingestPaymentEvent({
+        await this.signals.ingestPaymentEvent({
           xIdempotencyKey: ik,
           xTraceId: tid,
           paymentEvent: event,
@@ -253,6 +251,41 @@ export class AlogramRiskClient extends AlogramBaseClient {
         throw this.mapError(err);
       }
     });
+  }
+
+  /**
+   * 🔍 Query historical risk assessments and scores.
+   */
+  async getFraudScores(
+    tenantId: string,
+    options?: { startTime?: string; endTime?: string; traceId?: string }
+  ): Promise<generated.ScoresSuccessResponse> {
+    const tid = options?.traceId || this.generateId('trc');
+
+    try {
+      return await retry(
+        async (bail) => {
+          try {
+            return await this.forensics.getFraudScores({
+              tenantId,
+              startTime: options?.startTime,
+              endTime: options?.endTime,
+              xTraceId: tid,
+            });
+          } catch (err: any) {
+            const mapped = this.mapError(err);
+            if (mapped instanceof RateLimitError || mapped instanceof InternalServerError) {
+              throw mapped; // retry
+            }
+            bail(mapped);
+            throw mapped;
+          }
+        },
+        { retries: 2 }
+      );
+    } catch (e) {
+      throw this.mapError(e);
+    }
   }
 }
 
@@ -284,7 +317,7 @@ export class AlogramPublicClient extends AlogramBaseClient {
 
     return this.withTelemetry('alogram.ingest_signals', { tid, ik }, async () => {
       try {
-        await this.api.ingestSignals({
+        await this.signals.ingestSignals({
           xIdempotencyKey: ik,
           xTraceId: tid,
           signalsRequest: request,
