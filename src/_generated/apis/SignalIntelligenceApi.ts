@@ -15,54 +15,51 @@
 
 import * as runtime from '../runtime';
 import type {
-  AccountCheckRequest,
-  DecisionResponse,
-  KycCheckRequest,
+  PaymentEvent,
   Problem,
+  SignalsRequest,
 } from '../models/index';
 import {
-    AccountCheckRequestFromJSON,
-    AccountCheckRequestToJSON,
-    DecisionResponseFromJSON,
-    DecisionResponseToJSON,
-    KycCheckRequestFromJSON,
-    KycCheckRequestToJSON,
+    PaymentEventFromJSON,
+    PaymentEventToJSON,
     ProblemFromJSON,
     ProblemToJSON,
+    SignalsRequestFromJSON,
+    SignalsRequestToJSON,
 } from '../models/index';
 
-export interface AccountRiskCheckRequest {
+export interface IngestPaymentEventRequest {
     xIdempotencyKey: string;
-    accountCheckRequest: AccountCheckRequest;
+    paymentEvent: PaymentEvent;
     xTraceId?: string;
 }
 
-export interface KycRiskCheckRequest {
+export interface IngestSignalsRequest {
     xIdempotencyKey: string;
-    kycCheckRequest: KycCheckRequest;
+    signalsRequest: SignalsRequest;
     xTraceId?: string;
 }
 
 /**
  * 
  */
-export class PayriskApi extends runtime.BaseAPI {
+export class SignalIntelligenceApi extends runtime.BaseAPI {
 
     /**
-     * Synchronous fraud decision for account/session events (signup, login, settings)
+     * Ingest Lifecycle Signals
      */
-    async accountRiskCheckRaw(requestParameters: AccountRiskCheckRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DecisionResponse>> {
+    async ingestPaymentEventRaw(requestParameters: IngestPaymentEventRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters['xIdempotencyKey'] == null) {
             throw new runtime.RequiredError(
                 'xIdempotencyKey',
-                'Required parameter "xIdempotencyKey" was null or undefined when calling accountRiskCheck().'
+                'Required parameter "xIdempotencyKey" was null or undefined when calling ingestPaymentEvent().'
             );
         }
 
-        if (requestParameters['accountCheckRequest'] == null) {
+        if (requestParameters['paymentEvent'] == null) {
             throw new runtime.RequiredError(
-                'accountCheckRequest',
-                'Required parameter "accountCheckRequest" was null or undefined when calling accountRiskCheck().'
+                'paymentEvent',
+                'Required parameter "paymentEvent" was null or undefined when calling ingestPaymentEvent().'
             );
         }
 
@@ -90,70 +87,41 @@ export class PayriskApi extends runtime.BaseAPI {
         }
 
 
-        let urlPath = `/v1/risk/account/check`;
+        let urlPath = `/v1/events`;
 
         const response = await this.request({
             path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: AccountCheckRequestToJSON(requestParameters['accountCheckRequest']),
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => DecisionResponseFromJSON(jsonValue));
-    }
-
-    /**
-     * Synchronous fraud decision for account/session events (signup, login, settings)
-     */
-    async accountRiskCheck(requestParameters: AccountRiskCheckRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DecisionResponse> {
-        const response = await this.accountRiskCheckRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Health check for the service
-     */
-    async healthCheckRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-
-        let urlPath = `/v1/health`;
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
+            body: PaymentEventToJSON(requestParameters['paymentEvent']),
         }, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
 
     /**
-     * Health check for the service
+     * Ingest Lifecycle Signals
      */
-    async healthCheck(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.healthCheckRaw(initOverrides);
+    async ingestPaymentEvent(requestParameters: IngestPaymentEventRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.ingestPaymentEventRaw(requestParameters, initOverrides);
     }
 
     /**
-     * Synchronous decision for KYC/identity verification
+     * Submit Behavioral Intelligence
      */
-    async kycRiskCheckRaw(requestParameters: KycRiskCheckRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DecisionResponse>> {
+    async ingestSignalsRaw(requestParameters: IngestSignalsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters['xIdempotencyKey'] == null) {
             throw new runtime.RequiredError(
                 'xIdempotencyKey',
-                'Required parameter "xIdempotencyKey" was null or undefined when calling kycRiskCheck().'
+                'Required parameter "xIdempotencyKey" was null or undefined when calling ingestSignals().'
             );
         }
 
-        if (requestParameters['kycCheckRequest'] == null) {
+        if (requestParameters['signalsRequest'] == null) {
             throw new runtime.RequiredError(
-                'kycCheckRequest',
-                'Required parameter "kycCheckRequest" was null or undefined when calling kycRiskCheck().'
+                'signalsRequest',
+                'Required parameter "signalsRequest" was null or undefined when calling ingestSignals().'
             );
         }
 
@@ -181,25 +149,24 @@ export class PayriskApi extends runtime.BaseAPI {
         }
 
 
-        let urlPath = `/v1/risk/kyc/check`;
+        let urlPath = `/v1/signals`;
 
         const response = await this.request({
             path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: KycCheckRequestToJSON(requestParameters['kycCheckRequest']),
+            body: SignalsRequestToJSON(requestParameters['signalsRequest']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => DecisionResponseFromJSON(jsonValue));
+        return new runtime.VoidApiResponse(response);
     }
 
     /**
-     * Synchronous decision for KYC/identity verification
+     * Submit Behavioral Intelligence
      */
-    async kycRiskCheck(requestParameters: KycRiskCheckRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DecisionResponse> {
-        const response = await this.kycRiskCheckRaw(requestParameters, initOverrides);
-        return await response.value();
+    async ingestSignals(requestParameters: IngestSignalsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.ingestSignalsRaw(requestParameters, initOverrides);
     }
 
 }

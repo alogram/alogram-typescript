@@ -30,6 +30,7 @@ export class MockRiskClient {
       decision: decision.toLowerCase() as any,
       decisionAt: this.getTimestamp(),
       riskScore: score,
+      decisionScore: score,
       fraudScore: {
         riskLevel: 'low' as RiskLevelEnum,
         score: score,
@@ -87,6 +88,7 @@ export class MockRiskClient {
       decision: this._defaultDecision as any,
       decisionAt: this.getTimestamp(),
       riskScore: this._defaultScore,
+      decisionScore: this._defaultScore,
       fraudScore: {
         riskLevel: 'low' as RiskLevelEnum,
         score: this._defaultScore,
