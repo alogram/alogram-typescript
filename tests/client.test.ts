@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AlogramRiskClient, AlogramPublicClient } from '../src/client';
 import { AuthenticationError, RateLimitError, ScopedAccessError } from '../src/exceptions';
 
-const BASE_URL = 'https://api.alogram.ai';
+const BASE_URL = 'http://localhost:8080';
 const SECRET_KEY = 'sk_test_12345';
 const PUBLIC_KEY = 'pk_test_12345';
 
@@ -20,7 +20,7 @@ describe('Dual-Trust SDK Architecture', () => {
         apiKey: SECRET_KEY,
         tenantId: 'tid_default'
       });
-      vi.restoreAllMocks();
+      vi.clearAllMocks();
     });
 
     const validDecision = {
@@ -33,7 +33,6 @@ describe('Dual-Trust SDK Architecture', () => {
     };
 
     const validRequest = {
-      xIdempotencyKey: 'idk_550e8400e29b41d4a716446655440000',
       eventType: 'purchase',
       entities: { tenantId: 'tid_test', clientId: 'cid_test', endCustomerId: 'ecid_test' },
       purchase: { amount: 10, currency: 'USD' }
@@ -48,12 +47,12 @@ describe('Dual-Trust SDK Architecture', () => {
     });
 
     it('should propagate headers correctly', async () => {
-      const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(async () => ({
         ok: true,
         status: 200,
         json: async () => (validDecision),
         headers: new Headers({ 'content-type': 'application/json' }),
-      } as Response);
+      } as Response));
 
       await client.checkRisk(validRequest as any);
 
@@ -66,34 +65,37 @@ describe('Dual-Trust SDK Architecture', () => {
     });
 
     it('should map 401 to AuthenticationError', async () => {
-      const mockResponse = {
+      vi.spyOn(global, 'fetch').mockImplementation(async () => ({
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
         json: async () => ({ code: 401, message: 'Invalid Key' }),
         headers: new Headers({ 'content-type': 'application/json' }),
-      };
-
-      vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse as Response);
+      } as Response));
 
       await expect(client.checkRisk(validRequest as any)).rejects.toThrow(AuthenticationError);
     });
 
     it('should retry on 500 errors and eventually succeed', async () => {
-      const fetchSpy = vi.spyOn(global, 'fetch')
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 500,
-          statusText: 'Internal Server Error',
-          json: async () => ({ code: 500, message: 'Internal Server Error' }),
-          headers: new Headers({ 'content-type': 'application/json' }),
-        } as Response)
-        .mockResolvedValueOnce({
+      let callCount = 0;
+      const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            ok: false,
+            status: 500,
+            statusText: 'Internal Server Error',
+            json: async () => ({ code: 500, message: 'Internal Server Error' }),
+            headers: new Headers({ 'content-type': 'application/json' }),
+          } as Response;
+        }
+        return {
           ok: true,
           status: 200,
           json: async () => (validDecision),
           headers: new Headers({ 'content-type': 'application/json' }),
-        } as Response);
+        } as Response;
+      });
 
       const result = await client.checkRisk(validRequest as any);
       
