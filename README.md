@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
+</p>
+
 # Alogram PayRisk SDK for TypeScript & JavaScript
 
 [![NPM version](https://img.shields.io/npm/v/@alogram/payrisk.svg)](https://www.npmjs.com/package/@alogram/payrisk)
