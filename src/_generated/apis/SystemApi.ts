@@ -12,46 +12,40 @@
  * Do not edit the class manually.
  */
 
+
+import * as runtime from '../runtime';
+
 /**
- * The type of payment lifecycle event.
- * @export
- * @enum {string}
+ * 
  */
-export enum PaymentEventType {
-    Authorization = 'authorization',
-    Capture = 'capture',
-    Settlement = 'settlement',
-    Refund = 'refund',
-    Dispute = 'dispute',
-    Chargeback = 'chargeback',
-    ChargebackOutcome = 'chargeback_outcome'
-}
+export class SystemApi extends runtime.BaseAPI {
+
+    /**
+     * Health check for the service
+     */
+    async healthCheckRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
 
 
-export function instanceOfPaymentEventType(value: any): boolean {
-    for (const key in PaymentEventType) {
-        if (Object.prototype.hasOwnProperty.call(PaymentEventType, key)) {
-            if (PaymentEventType[key as keyof typeof PaymentEventType] === value) {
-                return true;
-            }
-        }
+        let urlPath = `/v1/health`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
     }
-    return false;
-}
 
-export function PaymentEventTypeFromJSON(json: any): PaymentEventType {
-    return PaymentEventTypeFromJSONTyped(json, false);
-}
+    /**
+     * Health check for the service
+     */
+    async healthCheck(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.healthCheckRaw(initOverrides);
+    }
 
-export function PaymentEventTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean): PaymentEventType {
-    return json as PaymentEventType;
 }
-
-export function PaymentEventTypeToJSON(value?: PaymentEventType | null): any {
-    return value as any;
-}
-
-export function PaymentEventTypeToJSONTyped(value: any, ignoreDiscriminator: boolean): PaymentEventType {
-    return value as PaymentEventType;
-}
-

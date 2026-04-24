@@ -18,7 +18,7 @@ let tracer: any = null;
 try {
   const { trace } = require('@opentelemetry/api');
   if (trace) {
-    tracer = trace.getTracer('@alogram/payrisk', '0.2.8');
+    tracer = trace.getTracer('@alogram/payrisk', '0.2.9');
   }
 } catch (e) {
   // OTel not available, skip telemetry
@@ -43,6 +43,7 @@ abstract class AlogramBaseClient {
   public riskScoring: generated.RiskScoringApi;
   public signals: generated.SignalIntelligenceApi;
   public forensics: generated.ForensicDataApi;
+  public system: generated.SystemApi;
 
   constructor(protected options: AlogramClientOptions) {
     const baseUrl = options.baseUrl || 'https://api.alogram.ai';
@@ -68,19 +69,54 @@ abstract class AlogramBaseClient {
     this.riskScoring = new generated.RiskScoringApi(this.config);
     this.signals = new generated.SignalIntelligenceApi(this.config);
     this.forensics = new generated.ForensicDataApi(this.config);
+    this.system = new generated.SystemApi(this.config);
+  }
+
+  /**
+   * 🚀 Intelligent Handshake: Wait for the infrastructure to wake up.
+   * This sends lightweight health checks with exponential backoff to warm up
+   * Cloud Run instances and Load Balancer proxies before actual testing.
+   */
+  public async waitForReady(timeoutSecs: number = 60): Promise<boolean> {
+    const startTime = Date.now();
+    let attempt = 1;
+    
+    console.info(`⏳ Performing TypeScript infrastructure handshake (timeout: ${timeoutSecs}s)...`);
+    
+    while ((Date.now() - startTime) < (timeoutSecs * 1000)) {
+      try {
+        // Lightweight GET /v1/health
+        await this.system.healthCheck();
+        console.info('✅ Infrastructure is READY.');
+        return true;
+      } catch (err: any) {
+        const waitTime = Math.min(Math.pow(2, attempt), 10);
+        console.warn(`⚠️ Handshake attempt ${attempt} failed: ${err.message}. Retrying in ${waitTime}s...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+        attempt++;
+      }
+    }
+
+    console.error('❌ Infrastructure handshake TIMEOUT.');
+    return false;
   }
 
   protected generateId(prefix: string): string {
-    return `${prefix}_${uuidv4().replace(/-/g, '')}`;
+    const hex = uuidv4().replace(/-/g, '');
+    return `${prefix}_${hex}`;
   }
 
   protected mapError(error: any): Error {
     if (error instanceof generated.ResponseError) {
       const status = error.response.status;
-      const message = `API Error: ${error.response.statusText}`;
+      const statusText = error.response.statusText || 'Unknown Status';
+      const message = `API Error: ${status} ${statusText}`;
       
       if (status === 401 || status === 403) {
         return new AuthenticationError(message, status);
+      }
+      if (status === 409) {
+        return new AlogramError(message, status);
       }
       if (status === 429) {
         return new RateLimitError(message, status);
@@ -157,16 +193,20 @@ export class AlogramRiskClient extends AlogramBaseClient {
     request: generated.CheckRequest,
     overrides?: { idempotencyKey?: string; traceId?: string }
   ): Promise<generated.DecisionResponse> {
-    const ik = overrides?.idempotencyKey || this.generateId('idk');
-    const tid = overrides?.traceId || this.generateId('trc');
-
-    return this.withTelemetry('alogram.check_risk', { tid, ik }, async () => {
+    return this.withTelemetry('alogram.check_risk', { tid: 'pending', ik: 'pending' }, async () => {
       try {
         return await retry(
           async (bail) => {
+            const ik = overrides?.idempotencyKey || this.generateId('idk');
+            const tid = overrides?.traceId || this.generateId('trc');
+
             try {
               // Re-construct headers for every attempt to ensure consistent state
-              const attemptHeaders: Record<string, string> = { ...(this.config.headers || {}) };
+              const attemptHeaders: Record<string, string> = { 
+                ...(this.config.headers || {}),
+                'x-idempotency-key': ik,
+                'x-trace-id': tid
+              };
               if (request.entities?.tenantId) {
                 attemptHeaders['x-trusted-tenant-id'] = request.entities.tenantId;
               }
@@ -181,6 +221,15 @@ export class AlogramRiskClient extends AlogramBaseClient {
               }, { headers: attemptHeaders });
             } catch (err: any) {
               const mapped = this.mapError(err);
+              if (this.options.debug) {
+                console.error('❌ API Error Detail:', err);
+                if (err.response) {
+                  try {
+                    const body = await err.response.json();
+                    console.error('📦 Error Body:', JSON.stringify(body, null, 2));
+                  } catch (e) {}
+                }
+              }
               if (mapped instanceof RateLimitError || mapped instanceof InternalServerError) {
                 throw mapped; // retry
               }
@@ -212,7 +261,11 @@ export class AlogramRiskClient extends AlogramBaseClient {
     const tid = overrides?.traceId || this.generateId('trc');
 
     return this.withTelemetry('alogram.ingest_signals', { tid, ik }, async () => {
-      const headers: Record<string, string> = { ...(this.config.headers || {}) };
+      const headers: Record<string, string> = { 
+        ...(this.config.headers || {}),
+        'x-idempotency-key': ik,
+        'x-trace-id': tid
+      };
       const actualRequest = (request as any).actualInstance || request;
       if (actualRequest.entities?.tenantId) {
         headers['x-trusted-tenant-id'] = actualRequest.entities.tenant_id || actualRequest.entities.tenantId;
@@ -242,12 +295,27 @@ export class AlogramRiskClient extends AlogramBaseClient {
 
     return this.withTelemetry('alogram.ingest_event', { tid, ik }, async () => {
       try {
-        await this.signals.ingestPaymentEvent({
+        const headers: Record<string, string> = { 
+          ...(this.config.headers || {}),
+          'x-idempotency-key': ik,
+          'x-trace-id': tid
+        };
+        // @ts-ignore - access raw for debug
+        await this.signals.ingestPaymentEventRaw({
           xIdempotencyKey: ik,
           xTraceId: tid,
           paymentEvent: event,
-        }, { headers: this.config.headers });
-      } catch (err) {
+        }, { headers });
+      } catch (err: any) {
+        if (this.options.debug) {
+          console.error('❌ API Error Detail:', err);
+          if (err.response) {
+            try {
+              const body = await err.response.json();
+              console.error('📦 Error Body:', JSON.stringify(body, null, 2));
+            } catch (e) {}
+          }
+        }
         throw this.mapError(err);
       }
     });
@@ -258,20 +326,35 @@ export class AlogramRiskClient extends AlogramBaseClient {
    */
   async getFraudScores(
     tenantId: string,
-    options?: { startTime?: string; endTime?: string; traceId?: string }
+    options?: { 
+      startTime?: string; 
+      endTime?: string; 
+      traceId?: string; 
+      idempotencyKey?: string;
+      pageSize?: number;
+      pageToken?: string;
+    }
   ): Promise<generated.ScoresSuccessResponse> {
     const tid = options?.traceId || this.generateId('trc');
+    const ik = options?.idempotencyKey || this.generateId('idk');
 
     try {
       return await retry(
         async (bail) => {
           try {
-            return await this.forensics.getFraudScores({
+            const headers: Record<string, string> = { 
+              ...(this.config.headers || {}),
+              'x-idempotency-key': ik,
+              'x-trace-id': tid
+            };
+            const req = {
               tenantId,
               startTime: options?.startTime,
               endTime: options?.endTime,
-              xTraceId: tid,
-            });
+              pageSize: options?.pageSize,
+              pageToken: options?.pageToken,
+            };
+            return await this.forensics.getFraudScores(req, { headers });
           } catch (err: any) {
             const mapped = this.mapError(err);
             if (mapped instanceof RateLimitError || mapped instanceof InternalServerError) {
@@ -317,11 +400,16 @@ export class AlogramPublicClient extends AlogramBaseClient {
 
     return this.withTelemetry('alogram.ingest_signals', { tid, ik }, async () => {
       try {
+        const headers: Record<string, string> = { 
+          ...(this.config.headers || {}),
+          'x-idempotency-key': ik,
+          'x-trace-id': tid
+        };
         await this.signals.ingestSignals({
           xIdempotencyKey: ik,
           xTraceId: tid,
           signalsRequest: request,
-        }, { headers: this.config.headers });
+        }, { headers });
       } catch (err) {
         throw this.mapError(err);
       }
