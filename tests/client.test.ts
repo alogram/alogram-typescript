@@ -97,7 +97,6 @@ describe('Dual-Trust SDK Architecture', () => {
       const result = await client.checkRisk(validRequest as any);
       
       expect(result.decision).toBe('approve');
-      // Use toBeGreaterThanOrEqual to account for potential OTel or middleware interference in CI
       expect(fetchSpy.mock.calls.length).toBeGreaterThanOrEqual(2);
     }, 15000);
   });

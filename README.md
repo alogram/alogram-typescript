@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
+  <img src="https://raw.githubusercontent.com/alogram/alogram-typescript/main/.github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
 </p>
 
 # Alogram PayRisk SDK for TypeScript & JavaScript
@@ -10,7 +10,6 @@
 The official TypeScript/Node.js client for the **Alogram PayRisk Engine**. 
 
 Alogram PayRisk is a decision management and risk orchestration engine for global commerce. It fuses machine learning, behavioral analytics, and deterministic business rules into a high-fidelity scoring pipeline designed for enterprise scale and auditability.
-
 ## 🧠 The Three-Expert Architecture
 
 The SDK provides unified access to three specialized risk experts:
@@ -19,8 +18,74 @@ The SDK provides unified access to three specialized risk experts:
 -   **Signal Intelligence**: Ingestion of behavioral telemetry and payment lifecycle events.
 -   **Forensic Data**: Deep visibility into historical assessments and decision transparency.
 
-## 🚀 Features
+---
 
+## 🔐 Security: Trust Boundaries
+
+Alogram enforces a strict separation between client-side telemetry and server-side decisioning.
+
+| Client Type | Key Prefix | Environment | Capabilities |
+| :--- | :--- | :--- | :--- |
+| **`AlogramPublicClient`** | `pk_...` | Browser / Mobile | **Ingestion only.** Restricted to behavioral signals. |
+| **`AlogramRiskClient`** | `sk_...` | Secure Backend | **Full access.** Authorized for risk decisions and forensics. |
+
+> [!WARNING]
+> **Never** use a Secret Key (`sk_...`) in a client-side environment. This will expose your tenant's sensitive forensic data and violate Alogram's security mandates.
+
+---
+
+## 🔄 Full Lifecycle Integration
+
+A complete integration spans from the shopper's browser to your secure backend.
+
+### 1. Frontend: Behavioral Signals
+In your browser-side application, use the **Public Client** to ingest telemetry:
+```typescript
+import { AlogramPublicClient } from '@alogram/payrisk';
+
+const publicClient = new AlogramPublicClient({ 
+  apiKey: 'pk_live_...', 
+  tenantId: 'tid_mycorp' 
+});
+
+// Ingest a login or checkout-start signal
+await publicClient.ingestSignals({
+  signalType: 'interaction',
+  entities: { endCustomerId: 'user_123' },
+  interactions: [{ interactionType: 'checkout_start', timestamp: new Date().toISOString() }]
+});
+```
+
+### 2. Backend: Risk Check & Events
+In your secure server, use the **Risk Client** to perform the assessment and log the outcome:
+```typescript
+import { AlogramRiskClient, PaymentEventType } from '@alogram/payrisk';
+
+const client = new AlogramRiskClient({ 
+  apiKey: 'sk_live_...', 
+  tenantId: 'tid_mycorp' 
+});
+
+// Assessment: Before you charge the card
+const decision = await client.checkRisk({
+  entities: { endCustomerId: 'user_123', deviceId: '...' },
+  purchase: { amount: 99.00, currency: 'USD', ... }
+});
+
+if (decision.decision === 'approve') {
+  // 3. Lifecycle: Confirm the authorization success
+  await client.ingestEvent({
+    paymentIntentId: decision.paymentIntentId,
+    eventType: PaymentEventType.Authorization,
+    outcome: { authorization: { approved: true } },
+    // ...
+  });
+}
+```
+
+---
+
+## 🚀 High-Performance Integration
 -   **🏢 Smart Client Architecture**: Specialized clients for server-side (`AlogramRiskClient`) and browser (`AlogramPublicClient`).
 -   **🛡️ Automated Identity**: Automatic injection of `x-api-key`, `Authorization`, and tenant headers.
 -   **🔄 Built-in Resiliency**: Transparent exponential backoff and jittered retries (3 retries on 429/5xx).
@@ -71,7 +136,26 @@ await client.ingestEvent({
 });
 ```
 
+### 🔄 3. Full Lifecycle Workflow
+
+For a complete end-to-end example showing how to correlate **client-side signals**, **risk scoring**, and **fraud labeling**, see:
+👉 [examples/fullLifecycleWorkflow.ts](examples/fullLifecycleWorkflow.ts)
+
+This workflow demonstrates how to:
+1.  **Anchor** pre-order signals using `sessionId` and `deviceId`.
+2.  **Correlate** those signals during the `checkRisk` call.
+3.  **Handoff** to the server-minted `paymentIntentId` for post-order events (Auth, Capture, Chargeback).
+
 ---
+
+## 🚀 High-Performance Integration
+
+To ensure sub-second risk assessment latencies and handle high-volume signal telemetry efficiently, please adhere to these network best practices:
+
+-   **Persistent Client:** Maintain a single instance of the client in your application lifecycle. 
+    -   *Why:* Creating a new client for every request forces a fresh TCP/TLS handshake.
+    -   *Best Practice:* Reuse the client to leverage persistent connection pools and keep the pipe "hot."
+-   **HTTP/2 Support:** Node.js 18+ and modern browsers natively support HTTP/2. By reusing the client, multiple telemetry signals are automatically multiplexed over a single pipe, significantly reducing latency for high-throughput instrumentation.
 
 ## 🛡️ Error Handling & Resiliency
 
