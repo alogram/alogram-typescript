@@ -12,42 +12,54 @@
  * Do not edit the class manually.
  */
 
+import { mapValues } from '../runtime';
 /**
- * The confidence level of the risk assessment.
+ * 
  * @export
- * @enum {string}
+ * @interface IngestPaymentEvent202Response
  */
-export enum ConfidenceEnum {
-    Low = 'low',
-    Medium = 'medium',
-    High = 'high'
+export interface IngestPaymentEvent202Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof IngestPaymentEvent202Response
+     */
+    status?: string;
 }
 
+/**
+ * Check if a given object implements the IngestPaymentEvent202Response interface.
+ */
+export function instanceOfIngestPaymentEvent202Response(value: object): value is IngestPaymentEvent202Response {
+    return true;
+}
 
-export function instanceOfConfidenceEnum(value: any): boolean {
-    for (const key in ConfidenceEnum) {
-        if (Object.prototype.hasOwnProperty.call(ConfidenceEnum, key)) {
-            if (ConfidenceEnum[key as keyof typeof ConfidenceEnum] === value) {
-                return true;
-            }
-        }
+export function IngestPaymentEvent202ResponseFromJSON(json: any): IngestPaymentEvent202Response {
+    return IngestPaymentEvent202ResponseFromJSONTyped(json, false);
+}
+
+export function IngestPaymentEvent202ResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): IngestPaymentEvent202Response {
+    if (json == null) {
+        return json;
     }
-    return false;
+    return {
+        
+        'status': json['status'] == null ? undefined : json['status'],
+    };
 }
 
-export function ConfidenceEnumFromJSON(json: any): ConfidenceEnum {
-    return ConfidenceEnumFromJSONTyped(json, false);
+export function IngestPaymentEvent202ResponseToJSON(json: any): IngestPaymentEvent202Response {
+    return IngestPaymentEvent202ResponseToJSONTyped(json, false);
 }
 
-export function ConfidenceEnumFromJSONTyped(json: any, ignoreDiscriminator: boolean): ConfidenceEnum {
-    return json as ConfidenceEnum;
-}
+export function IngestPaymentEvent202ResponseToJSONTyped(value?: IngestPaymentEvent202Response | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-export function ConfidenceEnumToJSON(value?: ConfidenceEnum | null): any {
-    return value as any;
-}
-
-export function ConfidenceEnumToJSONTyped(value: any, ignoreDiscriminator: boolean): ConfidenceEnum {
-    return value as ConfidenceEnum;
+    return {
+        
+        'status': value['status'],
+    };
 }
 
