@@ -2,6 +2,9 @@
 /* eslint-disable */
 export * from './Account';
 export * from './AccountCheckRequest';
+export * from './AgentManifest';
+export * from './AgentProvider';
+export * from './AuthContext';
 export * from './AvsResultEnum';
 export * from './BankTransfer';
 export * from './Card';
@@ -20,6 +23,7 @@ export * from './EntryMethodEnum';
 export * from './ExternalAssessment';
 export * from './FraudScore';
 export * from './Identity';
+export * from './IngestPaymentEvent202Response';
 export * from './Integrity';
 export * from './Interaction';
 export * from './InteractionTypeEnum';

@@ -12,42 +12,63 @@
  * Do not edit the class manually.
  */
 
+import { mapValues } from '../runtime';
 /**
- * The confidence level of the risk assessment.
+ * Contextual identity information from the authentication layer.
  * @export
- * @enum {string}
+ * @interface AuthContext
  */
-export enum ConfidenceEnum {
-    Low = 'low',
-    Medium = 'medium',
-    High = 'high'
+export interface AuthContext {
+    /**
+     * Unique identifier for an authenticated principal (e.g., an identity provider UID or Subject).  Unprefixed and case-sensitive. Supports common OIDC characters like ":", "|", "@", and ".".
+     * 
+     * @type {string}
+     * @memberof AuthContext
+     */
+    uid?: string;
+    /**
+     * The identity provider type (e.g., "external", "oidc", "saml").
+     * @type {string}
+     * @memberof AuthContext
+     */
+    provider?: string;
 }
 
+/**
+ * Check if a given object implements the AuthContext interface.
+ */
+export function instanceOfAuthContext(value: object): value is AuthContext {
+    return true;
+}
 
-export function instanceOfConfidenceEnum(value: any): boolean {
-    for (const key in ConfidenceEnum) {
-        if (Object.prototype.hasOwnProperty.call(ConfidenceEnum, key)) {
-            if (ConfidenceEnum[key as keyof typeof ConfidenceEnum] === value) {
-                return true;
-            }
-        }
+export function AuthContextFromJSON(json: any): AuthContext {
+    return AuthContextFromJSONTyped(json, false);
+}
+
+export function AuthContextFromJSONTyped(json: any, ignoreDiscriminator: boolean): AuthContext {
+    if (json == null) {
+        return json;
     }
-    return false;
+    return {
+        
+        'uid': json['uid'] == null ? undefined : json['uid'],
+        'provider': json['provider'] == null ? undefined : json['provider'],
+    };
 }
 
-export function ConfidenceEnumFromJSON(json: any): ConfidenceEnum {
-    return ConfidenceEnumFromJSONTyped(json, false);
+export function AuthContextToJSON(json: any): AuthContext {
+    return AuthContextToJSONTyped(json, false);
 }
 
-export function ConfidenceEnumFromJSONTyped(json: any, ignoreDiscriminator: boolean): ConfidenceEnum {
-    return json as ConfidenceEnum;
-}
+export function AuthContextToJSONTyped(value?: AuthContext | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-export function ConfidenceEnumToJSON(value?: ConfidenceEnum | null): any {
-    return value as any;
-}
-
-export function ConfidenceEnumToJSONTyped(value: any, ignoreDiscriminator: boolean): ConfidenceEnum {
-    return value as ConfidenceEnum;
+    return {
+        
+        'uid': value['uid'],
+        'provider': value['provider'],
+    };
 }
 

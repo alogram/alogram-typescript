@@ -13,21 +13,23 @@
  */
 
 /**
- * The confidence level of the risk assessment.
+ * The AI system provider that issued the agent manifest.
  * @export
  * @enum {string}
  */
-export enum ConfidenceEnum {
-    Low = 'low',
-    Medium = 'medium',
-    High = 'high'
+export enum AgentProvider {
+    Google = 'google',
+    Openai = 'openai',
+    Anthropic = 'anthropic',
+    Alogram = 'alogram',
+    Other = 'other'
 }
 
 
-export function instanceOfConfidenceEnum(value: any): boolean {
-    for (const key in ConfidenceEnum) {
-        if (Object.prototype.hasOwnProperty.call(ConfidenceEnum, key)) {
-            if (ConfidenceEnum[key as keyof typeof ConfidenceEnum] === value) {
+export function instanceOfAgentProvider(value: any): boolean {
+    for (const key in AgentProvider) {
+        if (Object.prototype.hasOwnProperty.call(AgentProvider, key)) {
+            if (AgentProvider[key as keyof typeof AgentProvider] === value) {
                 return true;
             }
         }
@@ -35,19 +37,19 @@ export function instanceOfConfidenceEnum(value: any): boolean {
     return false;
 }
 
-export function ConfidenceEnumFromJSON(json: any): ConfidenceEnum {
-    return ConfidenceEnumFromJSONTyped(json, false);
+export function AgentProviderFromJSON(json: any): AgentProvider {
+    return AgentProviderFromJSONTyped(json, false);
 }
 
-export function ConfidenceEnumFromJSONTyped(json: any, ignoreDiscriminator: boolean): ConfidenceEnum {
-    return json as ConfidenceEnum;
+export function AgentProviderFromJSONTyped(json: any, ignoreDiscriminator: boolean): AgentProvider {
+    return json as AgentProvider;
 }
 
-export function ConfidenceEnumToJSON(value?: ConfidenceEnum | null): any {
+export function AgentProviderToJSON(value?: AgentProvider | null): any {
     return value as any;
 }
 
-export function ConfidenceEnumToJSONTyped(value: any, ignoreDiscriminator: boolean): ConfidenceEnum {
-    return value as ConfidenceEnum;
+export function AgentProviderToJSONTyped(value: any, ignoreDiscriminator: boolean): AgentProvider {
+    return value as AgentProvider;
 }
 
