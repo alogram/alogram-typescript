@@ -12,62 +12,73 @@
  * Do not edit the class manually.
  */
 
-import type { SignalsAccountVariant } from './SignalsAccountVariant';
-import {
-    instanceOfSignalsAccountVariant,
-    SignalsAccountVariantFromJSON,
-    SignalsAccountVariantFromJSONTyped,
-    SignalsAccountVariantToJSON,
-} from './SignalsAccountVariant';
-import type { SignalsInteractionVariant } from './SignalsInteractionVariant';
-import {
-    instanceOfSignalsInteractionVariant,
-    SignalsInteractionVariantFromJSON,
-    SignalsInteractionVariantFromJSONTyped,
-    SignalsInteractionVariantToJSON,
-} from './SignalsInteractionVariant';
-
+import { mapValues } from '../runtime';
 /**
- * @type SignalsRequest
- * Request for processing application workflow signals. Determined by `signalType`.
  * 
  * @export
+ * @interface DecisionResolutionResponse
  */
-export type SignalsRequest = { signalType: 'account' } & SignalsAccountVariant | { signalType: 'interaction' } & SignalsInteractionVariant;
-
-export function SignalsRequestFromJSON(json: any): SignalsRequest {
-    return SignalsRequestFromJSONTyped(json, false);
+export interface DecisionResolutionResponse {
+    /**
+     * Indicates if the decision was successfully resolved and persisted.
+     * @type {boolean}
+     * @memberof DecisionResolutionResponse
+     */
+    ok: boolean;
+    /**
+     * Operational summary message.
+     * @type {string}
+     * @memberof DecisionResolutionResponse
+     */
+    message: string;
+    /**
+     * ISO-8601 timestamp of resolution completion.
+     * @type {Date}
+     * @memberof DecisionResolutionResponse
+     */
+    resolvedAt: Date;
 }
 
-export function SignalsRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): SignalsRequest {
+/**
+ * Check if a given object implements the DecisionResolutionResponse interface.
+ */
+export function instanceOfDecisionResolutionResponse(value: object): value is DecisionResolutionResponse {
+    if (!('ok' in value) || value['ok'] === undefined) return false;
+    if (!('message' in value) || value['message'] === undefined) return false;
+    if (!('resolvedAt' in value) || value['resolvedAt'] === undefined) return false;
+    return true;
+}
+
+export function DecisionResolutionResponseFromJSON(json: any): DecisionResolutionResponse {
+    return DecisionResolutionResponseFromJSONTyped(json, false);
+}
+
+export function DecisionResolutionResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): DecisionResolutionResponse {
     if (json == null) {
         return json;
     }
-    switch (json['signalType']) {
-        case 'account':
-            return Object.assign({}, SignalsAccountVariantFromJSONTyped(json, true), { signalType: 'account' } as const);
-        case 'interaction':
-            return Object.assign({}, SignalsInteractionVariantFromJSONTyped(json, true), { signalType: 'interaction' } as const);
-        default:
-            return json;
-    }
+    return {
+        
+        'ok': json['ok'],
+        'message': json['message'],
+        'resolvedAt': (new Date(json['resolvedAt'])),
+    };
 }
 
-export function SignalsRequestToJSON(json: any): any {
-    return SignalsRequestToJSONTyped(json, false);
+export function DecisionResolutionResponseToJSON(json: any): DecisionResolutionResponse {
+    return DecisionResolutionResponseToJSONTyped(json, false);
 }
 
-export function SignalsRequestToJSONTyped(value?: SignalsRequest | null, ignoreDiscriminator: boolean = false): any {
+export function DecisionResolutionResponseToJSONTyped(value?: DecisionResolutionResponse | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
-    switch (value['signalType']) {
-        case 'account':
-            return Object.assign({}, SignalsAccountVariantToJSON(value), { signalType: 'account' } as const);
-        case 'interaction':
-            return Object.assign({}, SignalsInteractionVariantToJSON(value), { signalType: 'interaction' } as const);
-        default:
-            return value;
-    }
+
+    return {
+        
+        'ok': value['ok'],
+        'message': value['message'],
+        'resolvedAt': value['resolvedAt'].toISOString(),
+    };
 }
 
