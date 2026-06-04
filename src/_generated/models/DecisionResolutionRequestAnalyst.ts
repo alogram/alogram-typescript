@@ -12,62 +12,75 @@
  * Do not edit the class manually.
  */
 
-import type { SignalsAccountVariant } from './SignalsAccountVariant';
-import {
-    instanceOfSignalsAccountVariant,
-    SignalsAccountVariantFromJSON,
-    SignalsAccountVariantFromJSONTyped,
-    SignalsAccountVariantToJSON,
-} from './SignalsAccountVariant';
-import type { SignalsInteractionVariant } from './SignalsInteractionVariant';
-import {
-    instanceOfSignalsInteractionVariant,
-    SignalsInteractionVariantFromJSON,
-    SignalsInteractionVariantFromJSONTyped,
-    SignalsInteractionVariantToJSON,
-} from './SignalsInteractionVariant';
-
+import { mapValues } from '../runtime';
 /**
- * @type SignalsRequest
- * Request for processing application workflow signals. Determined by `signalType`.
  * 
  * @export
+ * @interface DecisionResolutionRequestAnalyst
  */
-export type SignalsRequest = { signalType: 'account' } & SignalsAccountVariant | { signalType: 'interaction' } & SignalsInteractionVariant;
-
-export function SignalsRequestFromJSON(json: any): SignalsRequest {
-    return SignalsRequestFromJSONTyped(json, false);
+export interface DecisionResolutionRequestAnalyst {
+    /**
+     * The unique ID of the operator, SRE, or autonomous agent.
+     * @type {string}
+     * @memberof DecisionResolutionRequestAnalyst
+     */
+    id: string;
+    /**
+     * The system role of the decision maker.
+     * @type {string}
+     * @memberof DecisionResolutionRequestAnalyst
+     */
+    type: DecisionResolutionRequestAnalystTypeEnum;
 }
 
-export function SignalsRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): SignalsRequest {
+/**
+* @export
+* @enum {string}
+*/
+export enum DecisionResolutionRequestAnalystTypeEnum {
+    HumanMerchant = 'human_merchant',
+    AutomatedConsensus = 'automated_consensus',
+    AutonomousAgent = 'autonomous_agent'
+}
+
+
+/**
+ * Check if a given object implements the DecisionResolutionRequestAnalyst interface.
+ */
+export function instanceOfDecisionResolutionRequestAnalyst(value: object): value is DecisionResolutionRequestAnalyst {
+    if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('type' in value) || value['type'] === undefined) return false;
+    return true;
+}
+
+export function DecisionResolutionRequestAnalystFromJSON(json: any): DecisionResolutionRequestAnalyst {
+    return DecisionResolutionRequestAnalystFromJSONTyped(json, false);
+}
+
+export function DecisionResolutionRequestAnalystFromJSONTyped(json: any, ignoreDiscriminator: boolean): DecisionResolutionRequestAnalyst {
     if (json == null) {
         return json;
     }
-    switch (json['signalType']) {
-        case 'account':
-            return Object.assign({}, SignalsAccountVariantFromJSONTyped(json, true), { signalType: 'account' } as const);
-        case 'interaction':
-            return Object.assign({}, SignalsInteractionVariantFromJSONTyped(json, true), { signalType: 'interaction' } as const);
-        default:
-            return json;
-    }
+    return {
+        
+        'id': json['id'],
+        'type': json['type'],
+    };
 }
 
-export function SignalsRequestToJSON(json: any): any {
-    return SignalsRequestToJSONTyped(json, false);
+export function DecisionResolutionRequestAnalystToJSON(json: any): DecisionResolutionRequestAnalyst {
+    return DecisionResolutionRequestAnalystToJSONTyped(json, false);
 }
 
-export function SignalsRequestToJSONTyped(value?: SignalsRequest | null, ignoreDiscriminator: boolean = false): any {
+export function DecisionResolutionRequestAnalystToJSONTyped(value?: DecisionResolutionRequestAnalyst | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
-    switch (value['signalType']) {
-        case 'account':
-            return Object.assign({}, SignalsAccountVariantToJSON(value), { signalType: 'account' } as const);
-        case 'interaction':
-            return Object.assign({}, SignalsInteractionVariantToJSON(value), { signalType: 'interaction' } as const);
-        default:
-            return value;
-    }
+
+    return {
+        
+        'id': value['id'],
+        'type': value['type'],
+    };
 }
 

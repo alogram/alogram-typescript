@@ -1,9 +1,9 @@
 {
   "sdk": "typescript",
-  "version": "0.2.21",
-  "monorepo_commit": "92a7a5c260a3618f05b11acabd1249f32295500b",
+  "version": "0.2.23",
+  "monorepo_commit": "8b48ad701fc804e32664197cc323bb50b80b076e",
   "openapi_path": "apis/payrisk-v1/openapi.yaml",
-  "openapi_commit": "92a7a5c260a3618f05b11acabd1249f32295500b",
+  "openapi_commit": "8b48ad701fc804e32664197cc323bb50b80b076e",
   "generator": "openapi-generator-cli@7.19.0",
-  "built_at": "2026-05-31T19:59:04Z"
+  "built_at": "2026-06-04T20:07:00Z"
 }
