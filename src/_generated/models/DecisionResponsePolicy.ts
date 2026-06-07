@@ -14,64 +14,60 @@
 
 import { mapValues } from '../runtime';
 /**
- * Capture outcome details.
+ * Structured policy metadata and context active during transaction evaluation.
  * @export
- * @interface PaymentCaptureOutcome
+ * @interface DecisionResponsePolicy
  */
-export interface PaymentCaptureOutcome {
+export interface DecisionResponsePolicy {
     /**
-     * Capture status.
+     * The unique identifier of the active policy.
      * @type {string}
-     * @memberof PaymentCaptureOutcome
+     * @memberof DecisionResponsePolicy
      */
-    status?: PaymentCaptureOutcomeStatusEnum;
+    id?: string;
+    /**
+     * The name/version of the ruleset configuration.
+     * @type {string}
+     * @memberof DecisionResponsePolicy
+     */
+    ruleSet?: string;
 }
 
 /**
-* @export
-* @enum {string}
-*/
-export enum PaymentCaptureOutcomeStatusEnum {
-    None = 'none',
-    Partial = 'partial',
-    Full = 'full',
-    Failed = 'failed'
-}
-
-
-/**
- * Check if a given object implements the PaymentCaptureOutcome interface.
+ * Check if a given object implements the DecisionResponsePolicy interface.
  */
-export function instanceOfPaymentCaptureOutcome(value: object): value is PaymentCaptureOutcome {
+export function instanceOfDecisionResponsePolicy(value: object): value is DecisionResponsePolicy {
     return true;
 }
 
-export function PaymentCaptureOutcomeFromJSON(json: any): PaymentCaptureOutcome {
-    return PaymentCaptureOutcomeFromJSONTyped(json, false);
+export function DecisionResponsePolicyFromJSON(json: any): DecisionResponsePolicy {
+    return DecisionResponsePolicyFromJSONTyped(json, false);
 }
 
-export function PaymentCaptureOutcomeFromJSONTyped(json: any, ignoreDiscriminator: boolean): PaymentCaptureOutcome {
+export function DecisionResponsePolicyFromJSONTyped(json: any, ignoreDiscriminator: boolean): DecisionResponsePolicy {
     if (json == null) {
         return json;
     }
     return {
         
-        'status': json['status'] == null ? undefined : json['status'],
+        'id': json['id'] == null ? undefined : json['id'],
+        'ruleSet': json['ruleSet'] == null ? undefined : json['ruleSet'],
     };
 }
 
-export function PaymentCaptureOutcomeToJSON(json: any): PaymentCaptureOutcome {
-    return PaymentCaptureOutcomeToJSONTyped(json, false);
+export function DecisionResponsePolicyToJSON(json: any): DecisionResponsePolicy {
+    return DecisionResponsePolicyToJSONTyped(json, false);
 }
 
-export function PaymentCaptureOutcomeToJSONTyped(value?: PaymentCaptureOutcome | null, ignoreDiscriminator: boolean = false): any {
+export function DecisionResponsePolicyToJSONTyped(value?: DecisionResponsePolicy | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
         
-        'status': value['status'],
+        'id': value['id'],
+        'ruleSet': value['ruleSet'],
     };
 }
 
