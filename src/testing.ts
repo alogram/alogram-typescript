@@ -26,16 +26,10 @@ export class MockRiskClient {
 
   queueDecision(decision: string, score: number = 0.1, reason?: string): void {
     const resp: DecisionResponse = {
-      assessmentId: `mock-${Math.random().toString(36).substring(2, 14)}`,
+      id: `mock-${Math.random().toString(36).substring(2, 14)}`,
       decision: decision.toLowerCase() as any,
       decisionAt: this.getTimestamp(),
       riskScore: score,
-      decisionScore: score,
-      fraudScore: {
-        riskLevel: 'low' as RiskLevelEnum,
-        score: score,
-        explanation: 'Mocked response',
-      },
       reasons: reason ? [{
         code: 'MOCK_CODE',
         category: 'behavior' as any,
@@ -84,15 +78,10 @@ export class MockRiskClient {
     if (res) return res;
 
     return {
-      assessmentId: `mock-${Math.random().toString(36).substring(2, 14)}`,
+      id: `mock-${Math.random().toString(36).substring(2, 14)}`,
       decision: this._defaultDecision as any,
       decisionAt: this.getTimestamp(),
       riskScore: this._defaultScore,
-      decisionScore: this._defaultScore,
-      fraudScore: {
-        riskLevel: 'low' as RiskLevelEnum,
-        score: this._defaultScore,
-      },
       reasons: [{
         code: 'DEFAULT',
         category: 'behavior' as any,

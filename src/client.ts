@@ -18,7 +18,7 @@ let tracer: any = null;
 try {
   const { trace } = require('@opentelemetry/api');
   if (trace) {
-    tracer = trace.getTracer('@alogram/payrisk', '0.2.23');
+    tracer = trace.getTracer('@alogram/payrisk', '0.3.0');
   }
 } catch (e) {
   // OTel not available, skip telemetry
@@ -215,8 +215,8 @@ export class AlogramRiskClient extends AlogramBaseClient {
               }
 
               return await this.riskScoring.riskCheck({
-                xIdempotencyKey: ik,
-                xTraceId: tid,
+                idempotencyKey: ik,
+                traceId: tid,
                 checkRequest: request,
               }, { headers: attemptHeaders });
             } catch (err: any) {
@@ -273,8 +273,8 @@ export class AlogramRiskClient extends AlogramBaseClient {
 
       try {
         await this.signals.ingestSignals({
-          xIdempotencyKey: ik,
-          xTraceId: tid,
+          idempotencyKey: ik,
+          traceId: tid,
           signalsRequest: request,
         }, { headers });
       } catch (err) {
@@ -302,8 +302,8 @@ export class AlogramRiskClient extends AlogramBaseClient {
         };
         // @ts-ignore - access raw for debug
         await this.signals.ingestPaymentEventRaw({
-          xIdempotencyKey: ik,
-          xTraceId: tid,
+          idempotencyKey: ik,
+          traceId: tid,
           paymentEvent: event,
         }, { headers });
       } catch (err: any) {
@@ -406,8 +406,8 @@ export class AlogramPublicClient extends AlogramBaseClient {
           'x-trace-id': tid
         };
         await this.signals.ingestSignals({
-          xIdempotencyKey: ik,
-          xTraceId: tid,
+          idempotencyKey: ik,
+          traceId: tid,
           signalsRequest: request,
         }, { headers });
       } catch (err) {

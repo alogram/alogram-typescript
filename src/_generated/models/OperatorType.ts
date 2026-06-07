@@ -12,66 +12,43 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
 /**
- * Capture outcome details.
+ * Semantic classification of the platform operator performing the action. Opaque, immutable, lowercase. Helps downstream ETLs partition telemetry cleanly.
+ * 
  * @export
- * @interface PaymentCaptureOutcome
+ * @enum {string}
  */
-export interface PaymentCaptureOutcome {
-    /**
-     * Capture status.
-     * @type {string}
-     * @memberof PaymentCaptureOutcome
-     */
-    status?: PaymentCaptureOutcomeStatusEnum;
-}
-
-/**
-* @export
-* @enum {string}
-*/
-export enum PaymentCaptureOutcomeStatusEnum {
-    None = 'none',
-    Partial = 'partial',
-    Full = 'full',
-    Failed = 'failed'
+export enum OperatorType {
+    Human = 'human',
+    System = 'system',
+    AutonomousAgent = 'autonomous_agent'
 }
 
 
-/**
- * Check if a given object implements the PaymentCaptureOutcome interface.
- */
-export function instanceOfPaymentCaptureOutcome(value: object): value is PaymentCaptureOutcome {
-    return true;
-}
-
-export function PaymentCaptureOutcomeFromJSON(json: any): PaymentCaptureOutcome {
-    return PaymentCaptureOutcomeFromJSONTyped(json, false);
-}
-
-export function PaymentCaptureOutcomeFromJSONTyped(json: any, ignoreDiscriminator: boolean): PaymentCaptureOutcome {
-    if (json == null) {
-        return json;
+export function instanceOfOperatorType(value: any): boolean {
+    for (const key in OperatorType) {
+        if (Object.prototype.hasOwnProperty.call(OperatorType, key)) {
+            if (OperatorType[key as keyof typeof OperatorType] === value) {
+                return true;
+            }
+        }
     }
-    return {
-        
-        'status': json['status'] == null ? undefined : json['status'],
-    };
+    return false;
 }
 
-export function PaymentCaptureOutcomeToJSON(json: any): PaymentCaptureOutcome {
-    return PaymentCaptureOutcomeToJSONTyped(json, false);
+export function OperatorTypeFromJSON(json: any): OperatorType {
+    return OperatorTypeFromJSONTyped(json, false);
 }
 
-export function PaymentCaptureOutcomeToJSONTyped(value?: PaymentCaptureOutcome | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function OperatorTypeFromJSONTyped(json: any, ignoreDiscriminator: boolean): OperatorType {
+    return json as OperatorType;
+}
 
-    return {
-        
-        'status': value['status'],
-    };
+export function OperatorTypeToJSON(value?: OperatorType | null): any {
+    return value as any;
+}
+
+export function OperatorTypeToJSONTyped(value: any, ignoreDiscriminator: boolean): OperatorType {
+    return value as OperatorType;
 }
 

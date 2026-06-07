@@ -65,10 +65,10 @@ async function runMaximalSimulation() {
         },
       },
     } as any);
-    console.info(`✅ Decision: ${decision.decision} | ID: ${decision.paymentIntentId}`);
+    console.info(`✅ Decision: ${decision.decision} | ID: ${decision.id}`);
 
-    const pi = decision.paymentIntentId;
-    if (!pi) throw new Error('No PaymentIntentId returned from assessment.');
+    const pi = decision.id;
+    if (!pi) throw new Error('No ID returned from assessment.');
 
     // 💳 PHASE C: Payment Lifecycle (SignalIntelligenceApi)
 
@@ -101,7 +101,7 @@ async function runMaximalSimulation() {
       // Wrap in timeout because ingestions are async/eventually consistent
       await new Promise(r => setTimeout(resolve => r(resolve), 1500));
       const history = await client.getFraudScores(tenantId, { pageSize: 20 });
-      const found = history.scores?.some(s => s.assessmentId === decision.assessmentId);
+      const found = history.scores?.some(s => s.id === decision.id);
       if (found) {
         console.info('✨ SUCCESS: Transaction visible in forensics.');
       } else {
