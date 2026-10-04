@@ -12,63 +12,45 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
 /**
- * Contextual identity information from the authentication layer.
+ * Expected speed and channel of fulfillment.
  * @export
- * @interface AuthContext
+ * @enum {string}
  */
-export interface AuthContext {
-    /**
-     * Unique identifier for an authenticated principal (e.g., an identity provider UID or Subject).  Unprefixed and case-sensitive. Supports common OIDC characters like ":", "|", "@", and ".".
-     * 
-     * @type {string}
-     * @memberof AuthContext
-     */
-    uid?: string;
-    /**
-     * The identity provider type (e.g., "external", "oidc", "saml").
-     * @type {string}
-     * @memberof AuthContext
-     */
-    provider?: string;
+export enum FulfillmentSpeedEnum {
+    Standard = 'standard',
+    Express = 'express',
+    Overnight = 'overnight',
+    SameDay = 'same_day',
+    InstantDigital = 'instant_digital',
+    Bopis = 'bopis'
 }
 
-/**
- * Check if a given object implements the AuthContext interface.
- */
-export function instanceOfAuthContext(value: object): value is AuthContext {
-    return true;
-}
 
-export function AuthContextFromJSON(json: any): AuthContext {
-    return AuthContextFromJSONTyped(json, false);
-}
-
-export function AuthContextFromJSONTyped(json: any, ignoreDiscriminator: boolean): AuthContext {
-    if (json == null) {
-        return json;
+export function instanceOfFulfillmentSpeedEnum(value: any): boolean {
+    for (const key in FulfillmentSpeedEnum) {
+        if (Object.prototype.hasOwnProperty.call(FulfillmentSpeedEnum, key)) {
+            if (FulfillmentSpeedEnum[key as keyof typeof FulfillmentSpeedEnum] === value) {
+                return true;
+            }
+        }
     }
-    return {
-        
-        'uid': json['uid'] == null ? undefined : json['uid'],
-        'provider': json['provider'] == null ? undefined : json['provider'],
-    };
+    return false;
 }
 
-export function AuthContextToJSON(json: any): AuthContext {
-    return AuthContextToJSONTyped(json, false);
+export function FulfillmentSpeedEnumFromJSON(json: any): FulfillmentSpeedEnum {
+    return FulfillmentSpeedEnumFromJSONTyped(json, false);
 }
 
-export function AuthContextToJSONTyped(value?: AuthContext | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function FulfillmentSpeedEnumFromJSONTyped(json: any, ignoreDiscriminator: boolean): FulfillmentSpeedEnum {
+    return json as FulfillmentSpeedEnum;
+}
 
-    return {
-        
-        'uid': value['uid'],
-        'provider': value['provider'],
-    };
+export function FulfillmentSpeedEnumToJSON(value?: FulfillmentSpeedEnum | null): any {
+    return value as any;
+}
+
+export function FulfillmentSpeedEnumToJSONTyped(value: any, ignoreDiscriminator: boolean): FulfillmentSpeedEnum {
+    return value as FulfillmentSpeedEnum;
 }
 
