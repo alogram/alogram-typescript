@@ -12,63 +12,47 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
 /**
- * Contextual identity information from the authentication layer.
+ * Standardized high-level commodity classification for fraud scoring.
  * @export
- * @interface AuthContext
+ * @enum {string}
  */
-export interface AuthContext {
-    /**
-     * Unique identifier for an authenticated principal (e.g., an identity provider UID or Subject).  Unprefixed and case-sensitive. Supports common OIDC characters like ":", "|", "@", and ".".
-     * 
-     * @type {string}
-     * @memberof AuthContext
-     */
-    uid?: string;
-    /**
-     * The identity provider type (e.g., "external", "oidc", "saml").
-     * @type {string}
-     * @memberof AuthContext
-     */
-    provider?: string;
+export enum ItemCategoryEnum {
+    Physical = 'physical',
+    DigitalContent = 'digital_content',
+    GiftCard = 'gift_card',
+    Subscription = 'subscription',
+    Service = 'service',
+    Travel = 'travel',
+    CryptoVoucher = 'crypto_voucher',
+    Other = 'other'
 }
 
-/**
- * Check if a given object implements the AuthContext interface.
- */
-export function instanceOfAuthContext(value: object): value is AuthContext {
-    return true;
-}
 
-export function AuthContextFromJSON(json: any): AuthContext {
-    return AuthContextFromJSONTyped(json, false);
-}
-
-export function AuthContextFromJSONTyped(json: any, ignoreDiscriminator: boolean): AuthContext {
-    if (json == null) {
-        return json;
+export function instanceOfItemCategoryEnum(value: any): boolean {
+    for (const key in ItemCategoryEnum) {
+        if (Object.prototype.hasOwnProperty.call(ItemCategoryEnum, key)) {
+            if (ItemCategoryEnum[key as keyof typeof ItemCategoryEnum] === value) {
+                return true;
+            }
+        }
     }
-    return {
-        
-        'uid': json['uid'] == null ? undefined : json['uid'],
-        'provider': json['provider'] == null ? undefined : json['provider'],
-    };
+    return false;
 }
 
-export function AuthContextToJSON(json: any): AuthContext {
-    return AuthContextToJSONTyped(json, false);
+export function ItemCategoryEnumFromJSON(json: any): ItemCategoryEnum {
+    return ItemCategoryEnumFromJSONTyped(json, false);
 }
 
-export function AuthContextToJSONTyped(value?: AuthContext | null, ignoreDiscriminator: boolean = false): any {
-    if (value == null) {
-        return value;
-    }
+export function ItemCategoryEnumFromJSONTyped(json: any, ignoreDiscriminator: boolean): ItemCategoryEnum {
+    return json as ItemCategoryEnum;
+}
 
-    return {
-        
-        'uid': value['uid'],
-        'provider': value['provider'],
-    };
+export function ItemCategoryEnumToJSON(value?: ItemCategoryEnum | null): any {
+    return value as any;
+}
+
+export function ItemCategoryEnumToJSONTyped(value: any, ignoreDiscriminator: boolean): ItemCategoryEnum {
+    return value as ItemCategoryEnum;
 }
 
